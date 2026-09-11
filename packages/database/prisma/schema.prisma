@@ -467,6 +467,7 @@ model EventTeam {
   checkpoints   EventTeamCheckpoint[]
   scans         EventScan[]
   resources     EventTeamResource[]
+  resourceLogs  EventResourceAuditLog[]
   submissions   EventSubmission[]
   joinRequests  TeamJoinRequest[]
 
@@ -507,41 +508,50 @@ model EventStaff {
 }
 
 
+enum EventResourceAction {
+  ACQUIRE
+  RELEASE
+}
+
 model EventResource {
-  id          String @id @default(uuid())
+  id             String   @id @default(uuid())
+  eventId        String
+  name           String
+  description    String?
+  type           String
+  content        Json?
+  active         Boolean  @default(true)
 
-  eventId     String
+  // Task 4 additions
+  totalStock     Int      @default(0)
+  availableStock Int      @default(0)
+  maxPerTeam     Int      @default(1)
 
-  name        String
-  description String?
-  type        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  content     Json?
-
-  active      Boolean @default(true)
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  teamResources EventTeamResource[]
+  event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  teamResources  EventTeamResource[]
+  auditLogs      EventResourceAuditLog[]
 
   @@index([eventId])
 }
 
 model EventTeamResource {
-  id           String @id @default(uuid())
-
+  id           String    @id @default(uuid())
   teamId       String
   resourceId   String
-
   checkpointId String?
 
-  unlockedAt   DateTime @default(now())
+  // Task 4 additions
+  quantity     Int       @default(1)
+  acquiredAt   DateTime  @default(now())
+  releasedAt   DateTime?
 
-  team     EventTeam     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  resource EventResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  unlockedAt   DateTime  @default(now())
+
+  team         EventTeam     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  resource     EventResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, resourceId])
   @@index([teamId])
@@ -659,4 +669,20 @@ model TeamJoinRequest {
   @@unique([teamId, participantId])
   @@index([teamId])
   @@index([participantId])
+}
+
+model EventResourceAuditLog {
+  id         String              @id @default(uuid())
+  teamId     String
+  resourceId String
+  action     EventResourceAction
+  quantity   Int
+  timestamp  DateTime            @default(now())
+
+  team       EventTeam     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  resource   EventResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+  @@index([resourceId])
+  @@index([timestamp])
 }
