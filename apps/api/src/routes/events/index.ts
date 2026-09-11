@@ -3,6 +3,7 @@ import { participantRoutes } from "./participant";
 import { scanRoutes } from "./scan";
 import { submissionRoutes } from "./submission";
 import { adminRoutes } from "./admin";
+import { resourceRoutes } from "./resources";
 import { requireAuth } from "../../middleware/auth";
 import { prisma } from "@repo/database";
 
@@ -67,4 +68,5 @@ export async function eventsRoutes(app: FastifyInstance) {
   app.register(scanRoutes, { prefix: "/:eventId/checkpoints/scan" });
   app.register(submissionRoutes, { prefix: "/:eventId/submission" });
   app.register(adminRoutes, { prefix: "/admin" });
+  app.register(resourceRoutes, { prefix: "/:eventId/resources" });
 }
